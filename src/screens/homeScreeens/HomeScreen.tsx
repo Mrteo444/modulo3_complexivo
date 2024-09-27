@@ -13,6 +13,8 @@ import NewProductComponents from './components/NewProductComponents';
 // Interface para el estado del usuario
 interface FormUser {
   name: string;
+  edad: number;
+
 }
 
 ////////////////////// crud ////////////////
@@ -46,6 +48,7 @@ export const HomeScreen = () => {
   // Hook useState para el estado del usuario autenticado
   const [formUser, setFormUser] = useState<FormUser>({
     name: '',
+    edad: 0,
   });
   //// hook usestate : capturar y modificar la data 
   const [userData, setuserData] = useState<firebase.User | null>(null)
@@ -66,13 +69,16 @@ export const HomeScreen = () => {
   // useEffect para verificar el estado de autenticación/ obtener informacio 
   useEffect(() => {
     setuserData(auth.currentUser);
-    setFormUser({ name: auth.currentUser?.displayName ?? '' })
+    setFormUser({
+      name: auth.currentUser?.displayName ?? '',
+      edad: 0,  // Aquí deberías obtener la edad del usuario si está disponible, por ahora he puesto 0 como valor predeterminado
+    });
 
   }, []);
 
 
   //funcion: actualizar estado del formulario 
-  const handleSetValues = (key: string, value: string) => {
+  const handleSetValues = (key: string, value: string | number) => {
     setFormUser({ ...formUser, [key]: value })
 
   }
@@ -82,7 +88,7 @@ export const HomeScreen = () => {
     signOut(auth)
       .then(() => {
         console.log('Usuario deslogueado');
-        setFormUser({ name: '' }); // Limpiar el estado del usuario
+        setFormUser({ name: '', edad: 0 }); // Limpiar el estado del usuario
       })
       .catch((error) => {
         console.error('Error al desloguearse:', error);
@@ -130,6 +136,7 @@ export const HomeScreen = () => {
             <Text>Bienvenido</Text>
 
             <Text>{userData?.displayName}</Text>
+            <Text>Edad: {formUser.edad}</Text>
           </View>
           <View>
             <IconButton
@@ -162,7 +169,7 @@ export const HomeScreen = () => {
 
 
 
-        <Button mode="contained" onPress={handleLogout}>
+        <Button mode="contained" onPress={handleLogout}  style={styles.logout}>
           Desloguearse
         </Button>
       </View>
@@ -185,6 +192,12 @@ export const HomeScreen = () => {
           />
           <TextInput
             mode='outlined'
+            label="edad"
+            value={formUser.edad.toString()} // Convertir el número a string
+            onChangeText={(value) => handleSetValues('edad', parseInt(value) || 0)} // Convertir el valor ingresado a número
+          />
+          <TextInput
+            mode='outlined'
             label="correo"
             value={userData?.email!}
           />
@@ -199,7 +212,7 @@ export const HomeScreen = () => {
         onPress={() => setshowModalPorducts(true)}
       />
 
-      <NewProductComponents showModalProduct={showModalPorducts} setShowModalPorducts={setshowModalPorducts}/>
+      <NewProductComponents showModalProduct={showModalPorducts} setShowModalPorducts={setshowModalPorducts} />
 
 
 
