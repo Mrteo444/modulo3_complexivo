@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { Text, Button, Avatar, IconButton, Portal, Modal, Divider, TextInput } from 'react-native-paper';
+import { Text, Button, Avatar, IconButton, Portal, Modal, Divider, TextInput, FAB } from 'react-native-paper';
 import { styles } from '../../theme/styles';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../../config/firebaseConfig';
@@ -8,6 +8,7 @@ import firebase from '@firebase/auth';
 import { updateProfile } from 'firebase/auth';
 import { FlatList } from 'react-native-gesture-handler';
 import ProductCardComponent from './components/ProductCardComponent';
+import NewProductComponents from './components/NewProductComponents';
 
 // Interface para el estado del usuario
 interface FormUser {
@@ -16,22 +17,22 @@ interface FormUser {
 
 ////////////////////// crud ////////////////
 
-  //interface - product 
+//interface - product 
 
-  interface Product{
-    id:string;
-    code:string;
-    nombre:string;
-    descripcion:string;
-    price:number;
-    stock:number;
-  }
+interface Product {
+  id: string;
+  code: string;
+  nombre: string;
+  descripcion: string;
+  price: number;
+  stock: number;
+}
 
 
 export const HomeScreen = () => {
- ///////////////crud ////
- //hook useState : gestionar lista de pr 
- const [products, setproducts] = useState<Product[]>([])
+  ///////////////crud ////
+  //hook useState : gestionar lista de pr 
+  const [products, setproducts] = useState<Product[]>([])
 
 
 
@@ -50,9 +51,14 @@ export const HomeScreen = () => {
   const [userData, setuserData] = useState<firebase.User | null>(null)
 
 
-  //hook useState mostral modal 
+  //hook useState mostral modal  de ususario 
 
-  const [showModal, setshowModal] = useState<boolean>(false )
+  const [showModalProfile, setshowModalProfile] = useState<boolean>(false)
+
+
+  /// hoook usestate modal de producto 
+
+  const [showModalPorducts, setshowModalPorducts] = useState<boolean>(false)
 
 
 
@@ -60,14 +66,14 @@ export const HomeScreen = () => {
   // useEffect para verificar el estado de autenticación/ obtener informacio 
   useEffect(() => {
     setuserData(auth.currentUser);
-    setFormUser({name:auth.currentUser?.displayName ?? ''})
-    
+    setFormUser({ name: auth.currentUser?.displayName ?? '' })
+
   }, []);
 
 
   //funcion: actualizar estado del formulario 
-  const handleSetValues=(key:string,value:string)=>{
-    setFormUser({...formUser,[key]:value})
+  const handleSetValues = (key: string, value: string) => {
+    setFormUser({ ...formUser, [key]: value })
 
   }
 
@@ -84,109 +90,116 @@ export const HomeScreen = () => {
   };
 
   ///funcion : oactualizar la informacion de usuarios autenticado 
-  const handleUpdateUser =  async() => {
+  const handleUpdateUser = async () => {
 
     try {
       await updateProfile(userData!,
-        {displayName:formUser.name}
+        { displayName: formUser.name }
       );
-      
+
     } catch (error) {
       console.log(error);
-      
-      
+
+
     }
-    
-    setshowModal(false)
+
+    setshowModalProfile(false)
 
   }
   ///funciuion para cerra  modal 
-  const modalclose =  () => {
+  const modalclose = () => {
 
-   
-    
-    setshowModal(false)
+
+
+    setshowModalProfile(false)
 
   }
 
-  
+
 
 
 
 
   return (
     <>
-    <View style={styles.homeheard}>
-      <View style={styles.bienvenida}>
-        <Avatar.Icon size={45} icon="folder" />
+      <View style={styles.homeheard}>
+        <View style={styles.bienvenida}>
+          <Avatar.Icon size={45} icon="folder" />
 
-        <View>
-          <Text>Bienvenido</Text>
-        
-          <Text>{userData?.displayName}</Text>
+          <View>
+            <Text>Bienvenido</Text>
+
+            <Text>{userData?.displayName}</Text>
+          </View>
+          <View>
+            <IconButton
+              icon="account-heart"
+              size={30}
+              onPress={() => setshowModalProfile(true)}
+              style={styles.iconPefil}
+            />
+          </View>
         </View>
+
+
         <View>
-        <IconButton
-          icon="account-heart"
-          size={30}
-          onPress={() => setshowModal(true)}
-          style={styles.iconPefil}
-        />
+          <FlatList
+            data={products}
+            renderItem={({ item }) => <ProductCardComponent />}
+            keyExtractor={item => item.id}
+          />
+        </View>
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <Button mode="contained" onPress={handleLogout}>
+          Desloguearse
+        </Button>
       </View>
-      </View>
 
-
-      <View>
-      <FlatList
-        data={products}
-        renderItem={({item}) => <ProductCardComponent  />}
-        keyExtractor={item => item.id}
-      />
-      </View>
-
-
-      
-
-
-
-
-
-
-
-
-
-
-      <Button mode="contained" onPress={handleLogout}>
-        Desloguearse
-      </Button>
-    </View>
-
-    <Portal>
-        <Modal visible={showModal}  contentContainerStyle={styles.modela2}>
-        <IconButton
-          icon="close"
-          size={24}
-          onPress={modalclose} // Cierra el modal al presionar la "X"
-          style={styles.closeIcon}
-        />
+      <Portal>
+        <Modal visible={showModalProfile} contentContainerStyle={styles.modela2}>
+          <IconButton
+            icon="close"
+            size={24}
+            onPress={modalclose} // Cierra el modal al presionar la "X"
+            style={styles.closeIcon}
+          />
           <Text>mi PERFIL .</Text>
           <Divider></Divider>
           <TextInput
-          mode='outlined'
-          label="nombre"
-          value={formUser.name}
-          onChangeText={(value)=>handleSetValues('name',value)}
+            mode='outlined'
+            label="nombre"
+            value={formUser.name}
+            onChangeText={(value) => handleSetValues('name', value)}
           />
           <TextInput
-          mode='outlined'
-          label="correo"
-          value={userData?.email!}
+            mode='outlined'
+            label="correo"
+            value={userData?.email!}
           />
-          
+
           <Button mode='contained' onPress={handleUpdateUser}>Actualizar </Button>
         </Modal>
-        
+
       </Portal>
+      <FAB
+        icon="plus"
+        style={styles.fab}
+        onPress={() => setshowModalPorducts(true)}
+      />
+
+      <NewProductComponents showModalProduct={showModalPorducts} setShowModalPorducts={setshowModalPorducts}/>
 
 
 

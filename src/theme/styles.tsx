@@ -70,6 +70,12 @@
         padding:10,
         alignItems:'center',
         gap:15,
-      }
+      },
+      fab: {
+        position: 'absolute',
+        margin: 16,
+        right: 0,
+        bottom: 0,
+      },
 
  })
