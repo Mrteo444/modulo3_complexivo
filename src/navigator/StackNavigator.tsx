@@ -8,11 +8,13 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../config/firebaseConfig';
 import { View } from 'react-native';
 import { ActivityIndicator } from 'react-native-paper';
+import DetailProductScreen from '../screens/homeScreeens/DetailProductScreen';
 
 // INTERFACE - RUTAS (STACKsCREEEN )
 interface Routes {
     name: string;
     screen: () => JSX.Element;
+    headerShow?:boolean;
 }
 
 // Arreglos - rutas cuando el usuario no esté autenticado
@@ -24,6 +26,7 @@ const routesNoAuth: Routes[] = [
 // Arreglos - rutas cuando el usuario esté autenticado
 const routesAuth: Routes[] = [
     { name: 'Home', screen: HomeScreen },
+    {name:'Detail',screen:DetailProductScreen,headerShow:true}
 
 ];
 
@@ -75,7 +78,7 @@ export const StackNavigator = () => {
                         <Stack.Screen
                             key={index}
                             name={item.name}
-                            options={{ headerShown: false }}
+                            options={{ headerShown: item.headerShow?? false }}
                             component={item.screen}
                         />
                     ))

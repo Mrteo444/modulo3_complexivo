@@ -3,25 +3,22 @@ import { View } from 'react-native';
 import { Text, Button, Avatar, IconButton, Portal, Modal, Divider, TextInput, FAB } from 'react-native-paper';
 import { styles } from '../../theme/styles';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from '../../config/firebaseConfig';
+import { auth, dbRealTime } from '../../config/firebaseConfig';
 import firebase from '@firebase/auth';
 import { updateProfile } from 'firebase/auth';
 import { FlatList } from 'react-native-gesture-handler';
 import ProductCardComponent from './components/ProductCardComponent';
 import NewProductComponents from './components/NewProductComponents';
+import { onValue, ref } from 'firebase/database';
 
 // Interface para el estado del usuario
 interface FormUser {
   name: string;
   edad: number;
-
 }
 
-////////////////////// crud ////////////////
-
-//interface - product 
-
-interface Product {
+// Interface para el producto
+ export interface Product {
   id: string;
   code: string;
   nombre: string;
@@ -30,58 +27,42 @@ interface Product {
   stock: number;
 }
 
-
 export const HomeScreen = () => {
-  ///////////////crud ////
-  //hook useState : gestionar lista de pr 
-  const [products, setproducts] = useState<Product[]>([])
+  // Hook useState: gestionar lista de productos
+  const [products, setProducts] = useState<Product[]>([]);
 
-
-
-
-
-
-
-
-
-  //////////////////////////////
   // Hook useState para el estado del usuario autenticado
   const [formUser, setFormUser] = useState<FormUser>({
     name: '',
     edad: 0,
   });
-  //// hook usestate : capturar y modificar la data 
-  const [userData, setuserData] = useState<firebase.User | null>(null)
 
+  // Hook useState: capturar y modificar la data del usuario
+  const [userData, setUserData] = useState<firebase.User | null>(null);
 
-  //hook useState mostral modal  de ususario 
+  // Hook useState para mostrar modal de usuario
+  const [showModalProfile, setShowModalProfile] = useState<boolean>(false);
 
-  const [showModalProfile, setshowModalProfile] = useState<boolean>(false)
+  // Hook useState para mostrar modal de productos
+  const [showModalProducts, setShowModalProducts] = useState<boolean>(false);
 
-
-  /// hoook usestate modal de producto 
-
-  const [showModalPorducts, setshowModalPorducts] = useState<boolean>(false)
-
-
-
-
-  // useEffect para verificar el estado de autenticación/ obtener informacio 
+  // useEffect para verificar el estado de autenticación
   useEffect(() => {
-    setuserData(auth.currentUser);
+    setUserData(auth.currentUser);
     setFormUser({
       name: auth.currentUser?.displayName ?? '',
-      edad: 0,  // Aquí deberías obtener la edad del usuario si está disponible, por ahora he puesto 0 como valor predeterminado
-    });
+      edad: 0, // Aquí deberías obtener la edad del usuario si está disponible
 
+      //llamar los prodcutos 
+      
+    });
+    getAllProducts();
   }, []);
 
-
-  //funcion: actualizar estado del formulario 
+  // Función para actualizar el estado del formulario
   const handleSetValues = (key: string, value: string | number) => {
-    setFormUser({ ...formUser, [key]: value })
-
-  }
+    setFormUser({ ...formUser, [key]: value });
+  };
 
   // Función para desloguearse
   const handleLogout = () => {
@@ -95,46 +76,50 @@ export const HomeScreen = () => {
       });
   };
 
-  ///funcion : oactualizar la informacion de usuarios autenticado 
+  // Función para actualizar la información del usuario autenticado
   const handleUpdateUser = async () => {
-
     try {
-      await updateProfile(userData!,
-        { displayName: formUser.name }
-      );
-
+      await updateProfile(userData!, { displayName: formUser.name });
     } catch (error) {
       console.log(error);
-
-
     }
+    setShowModalProfile(false);
+  };
 
-    setshowModalProfile(false)
+  // Función para cerrar el modal de usuario
+  const modalClose = () => {
+    setShowModalProfile(false);
+  };
 
-  }
-  ///funciuion para cerra  modal 
-  const modalclose = () => {
+  // Función para obtener la lista de productos
+  const getAllProducts = () => {
+    // 1. Dirección a la tabla de base de datos
+    const dbRef = ref(dbRealTime, 'products');
+    
+    // 2. Acceder a la data
+    onValue(dbRef, (snapshot) => {
+      const data = snapshot.val();
+      const getKeys = Object.keys(data);
+      const listProduct: Product[] = [];
 
+      // 3. Recorrer las keys para acceder a cada producto
+      getKeys.forEach((key) => {
+        const value = { ...data[key], id: key };
+        listProduct.push(value);
+      });
 
-
-    setshowModalProfile(false)
-
-  }
-
-
-
-
-
+      // 4. Actualizar la data del hook useState
+      setProducts(listProduct);
+    });
+  };
 
   return (
     <>
       <View style={styles.homeheard}>
         <View style={styles.bienvenida}>
           <Avatar.Icon size={45} icon="folder" />
-
           <View>
             <Text>Bienvenido</Text>
-
             <Text>{userData?.displayName}</Text>
             <Text>Edad: {formUser.edad}</Text>
           </View>
@@ -142,34 +127,21 @@ export const HomeScreen = () => {
             <IconButton
               icon="account-heart"
               size={30}
-              onPress={() => setshowModalProfile(true)}
+              onPress={() => setShowModalProfile(true)}
               style={styles.iconPefil}
             />
           </View>
         </View>
 
-
         <View>
           <FlatList
             data={products}
-            renderItem={({ item }) => <ProductCardComponent />}
+            renderItem={({ item }) => <ProductCardComponent product={item}/>}
             keyExtractor={item => item.id}
           />
         </View>
 
-
-
-
-
-
-
-
-
-
-
-
-
-        <Button mode="contained" onPress={handleLogout}  style={styles.logout}>
+        <Button mode="contained" onPress={handleLogout} style={styles.logout}>
           Desloguearse
         </Button>
       </View>
@@ -179,43 +151,42 @@ export const HomeScreen = () => {
           <IconButton
             icon="close"
             size={24}
-            onPress={modalclose} // Cierra el modal al presionar la "X"
+            onPress={modalClose} // Cierra el modal al presionar la "X"
             style={styles.closeIcon}
           />
-          <Text>mi PERFIL .</Text>
-          <Divider></Divider>
+          <Text>Mi PERFIL.</Text>
+          <Divider />
           <TextInput
             mode='outlined'
-            label="nombre"
+            label="Nombre"
             value={formUser.name}
             onChangeText={(value) => handleSetValues('name', value)}
           />
           <TextInput
             mode='outlined'
-            label="edad"
+            label="Edad"
             value={formUser.edad.toString()} // Convertir el número a string
             onChangeText={(value) => handleSetValues('edad', parseInt(value) || 0)} // Convertir el valor ingresado a número
           />
           <TextInput
             mode='outlined'
-            label="correo"
+            label="Correo"
             value={userData?.email!}
           />
-
-          <Button mode='contained' onPress={handleUpdateUser}>Actualizar </Button>
+          <Button mode='contained' onPress={handleUpdateUser}>Actualizar</Button>
         </Modal>
-
       </Portal>
+
       <FAB
         icon="plus"
         style={styles.fab}
-        onPress={() => setshowModalPorducts(true)}
+        onPress={() => setShowModalProducts(true)}
       />
 
-      <NewProductComponents showModalProduct={showModalPorducts} setShowModalPorducts={setshowModalPorducts} />
-
-
-
+      <NewProductComponents
+        showModalProduct={showModalProducts}
+        setShowModalPorducts={setShowModalProducts}
+      />
     </>
   );
 };

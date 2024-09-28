@@ -84,6 +84,13 @@ export const styles = StyleSheet.create({
         marginTop: 20, // Margen superior
         paddingVertical: 5, // Reducir la altura del botón
         paddingHorizontal: 20, // Ajustar el padding horizontal// Ajustar el padding horizontal para que sea más pequeño
-    }
+    },
+    rootDetail: {
+        flex: 1,
+        justifyContent: 'center',
+        //alignItems:'center',
+        paddingHorizontal: 30,
+        gap: 15
+    },
 
 })
