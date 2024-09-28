@@ -132,6 +132,7 @@ export const HomeScreen = () => {
             />
           </View>
         </View>
+        <Text>SISTEMA DE  GESTION  DE PRODUCTOS</Text>
 
         <View>
           <FlatList
@@ -176,8 +177,11 @@ export const HomeScreen = () => {
           <Button mode='contained' onPress={handleUpdateUser}>Actualizar</Button>
         </Modal>
       </Portal>
+    
+
 
       <FAB
+      
         icon="plus"
         style={styles.fab}
         onPress={() => setShowModalProducts(true)}

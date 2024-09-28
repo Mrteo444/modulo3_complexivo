@@ -90,7 +90,7 @@ const DetailProductScreen = () => {
 
     return (
         <View style={styles.rootDetail}>
-            <Text>Detail Product Screen</Text>
+            <Text>PRODUCTO</Text>
             <Divider></Divider>
            
             <View>
